@@ -17,7 +17,7 @@ def create_grid(lines):
                 grid[(r,c)] = "."
             else:
                 grid[(r,c)] = char
-    return grid, guard, len(lines[0]), len(lines) # max row, max col
+    return grid, guard
 
 def step_or_turn(guard, direction):
     dr, dc = directions[direction]
@@ -32,52 +32,46 @@ def step_or_turn(guard, direction):
         guard = -1
     return guard, direction
 
-def loop_exists(start, in_directions):
-    #put an obstacle on "next point", turn right and check, if comes back to start postion from same direction
-    result = set()
-    for in_direction in in_directions:
-        guard = start
-        obstacle = tuple_sum(start, directions[in_direction])
-        grid[obstacle] = "#"
-        direction = (in_direction + 1) % 4
-        visited = defaultdict(set)
-        while guard in grid.keys():
-            guard, direction = step_or_turn(guard, direction)
-            if direction in visited[guard]:
-                ic(obstacle, direction, start)
-                result.add(obstacle)
-                guard = -1
-            elif guard != -1:
-                visited[guard].add(direction)
-        grid[obstacle] = "."
-    return result
+def loop_exists(start):
+    #check whole path - if detected point from same direction -> loop
+    guard = start
+    direction = 0
+    visited = defaultdict(set)
+    while guard in grid.keys():
+        guard, direction = step_or_turn(guard, direction)
+        if direction in visited[guard]:
+            return True
+        elif guard != -1:
+            visited[guard].add(direction)
+    return False
 
 #MAIN
-with open("test.txt") as file:
+with open("data.txt") as file:
     lines = file.read().splitlines()
 
-grid, guard, max_row, max_col = create_grid(lines)
+grid, guard_start = create_grid(lines)
 directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # ULDR
 direction = 0
 path = defaultdict(set) # key = visited point, value = set of incoming directions
-path[guard].add(0) #first point is also visited
+path[guard_start].add(0) #first point is also visited
 
+#Part 1
+guard = guard_start
 while guard in grid.keys():
     guard, direction = step_or_turn(guard, direction)
     if guard != -1:
         path[guard].add(direction)
 print("Part 1:", len(path.keys()))
 
-#TODO: part2 not working completely yet - not detecting all possible points
-loop_points = set()
-counter = 0
-for start, in_dirs in path.items():
-    counter += 1
-    loop_points |= loop_exists(start, in_dirs)
-    if counter % 100 == 0:
-        print(counter)
-
-print(loop_points)
-print(len(loop_points))
+#Part 2
+result = 0
+for counter, point in enumerate(path.keys()):
+    if point == guard_start:
+        continue
+    grid[point] = "#"
+    if loop_exists(guard_start):
+        result += 1
+    grid[point] = "."
+print("Part 2:", result)
 
 print("Runtime:", datetime.now() - time_start)
