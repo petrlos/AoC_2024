@@ -23,7 +23,15 @@ def find_region_size_and_perimeter(coords):
             if neighbour in coords and neighbour not in visited:
                 visited.append(neighbour)
                 queue.append(neighbour)
-    return visited
+    perimeter = 0
+    for coord in visited:
+        counter = 0
+        neighbours = [tuple_sum(direction, coord) for direction in directions]
+        for neighbour in neighbours:
+            if neighbour in visited:
+                counter += 1
+        perimeter += 4 - counter
+    return visited, perimeter
 
 #MAIN
 with open("test.txt") as file:
@@ -31,8 +39,10 @@ with open("test.txt") as file:
 
 grid, max_r, max_c = create_grid(lines)
 
+price = 0
 for region in grid.keys():
     while len(grid[region]) > 0:
-        visited = find_region_size_and_perimeter(grid[region])
+        visited, perimeter = find_region_size_and_perimeter(grid[region])
         grid[region] = [item for item in grid[region] if item not in visited]
-        print(region, len(visited))
+        price += len(visited) * perimeter
+print("Part 1:", price)
