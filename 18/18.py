@@ -31,6 +31,7 @@ with open("data.txt") as file:
 part1 = find_path(lines, 1024, 70)
 print("Part 1:", part1)
 
-for bytes in range(2800, len(lines)):
+for bytes in range(len(lines), 0, -1):
     if find_path(lines, bytes, 70) > 0:
         print(bytes, lines[bytes])
+        break
