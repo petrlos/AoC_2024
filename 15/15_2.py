@@ -24,23 +24,16 @@ grid, r, c = parse_grid(lines[0])
 
 directions = dict(zip("^v<>", [(-1,0), (1,0), (0,-1), (0,1)]))
 for move in lines[1]:
-    if move not in directions.keys():
+    if move not in directions.keys(): #directions contains \n -> must be ignored
         continue
     r_or, c_or = r, c
-    print(move, r,c)
-
-    grid[r][c] = "@"
-    for line in grid:
-        grid[r][c] = "@"
-        print("".join(line))
-    grid[r][c] = "."
 
     to_be_pushed = []
     dr, dc = directions[move]
     if grid[r+dr][c+dc] == "#":
         continue
     r, c = r + dr, c + dc
-    if grid[r][c] == ".": #moves on empty place withnout pushing boxes
+    if grid[r][c] == ".": #moves on empty place without pushing boxes
         pass
     elif move in "<>": #move left/right -> only one row of boxes would be pushed
         push_r, push_c = r, c
@@ -60,19 +53,19 @@ for move in lines[1]:
         must_be_moved = []
         while queue:
             row, col = queue.pop()
-            if grid[row][col] == "#":
+            if grid[row][col] == "#": #move not possible - delete everything scanned and put robot back
                 move = False
                 queue = []
                 must_be_moved = []
+                r = r - dr
             elif grid[row][col] == "[":
-                queue += [(row +dr, col), (row+dr, col+1)]
-                must_be_moved += [(row, col), (row, col+1)]
+                queue += [(row +dr, col), (row+dr, col+1)] #row in direction up/down, other half of the box left
+                must_be_moved += [(row, col), (row, col+1)] #complete box to be moved
             elif grid[row][col] == "]":
-                queue += [(row+dr, col), (row+dr, col-1)]
-                must_be_moved += [(row, col), (row, col-1)]
+                queue += [(row+dr, col), (row+dr, col-1)] #row in direction up/down, other half of the box right
+                must_be_moved += [(row, col), (row, col-1)] #complete box to be moved
         if not move:
-            r = r - dr
-        print(must_be_moved)
+            continue
         if dr < 0: #move up
             must_be_moved = sorted(list(set(must_be_moved)))
             for row, col in must_be_moved:
@@ -85,17 +78,17 @@ for move in lines[1]:
                 grid[row + dr][col] = grid[row][col]
                 grid[row][col] = "."
 
-    print(" ")
-
-grid[r][c] = "@"
+#uncomment to print result grid
+"""grid[r][c] = "@"
 for line in grid:
     grid[r][c] = "@"
     print("".join(line))
 grid[r][c] = "."
+"""
 
 gps = 0
 for row, line in enumerate(grid):
     for col, char in enumerate(line):
         if char == "[":
             gps += 100* row + col
-print(gps)
+print("Part 2:",gps)
