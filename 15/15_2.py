@@ -1,4 +1,6 @@
 #Advent of Code 2024: Day 15
+from collections import deque
+
 def parse_grid(lines):
     enlarge_grid = dict({"#":"##", ".":"..", "O":"[]", "@":"@."})
     r, c = 0, 0
@@ -15,24 +17,38 @@ def parse_grid(lines):
     return grid, r, c
 
 #MAIN
-with open("test_3.txt") as file:
+with open("data.txt") as file:
     lines = file.read().split("\n\n")
 
 grid, r, c = parse_grid(lines[0])
 
 directions = dict(zip("^v<>", [(-1,0), (1,0), (0,-1), (0,1)]))
 for move in lines[1]:
+    if move not in directions.keys():
+        continue
+    r_or, c_or = r, c
+    print(move, r,c)
+
+    grid[r][c] = "@"
+    for line in grid:
+        grid[r][c] = "@"
+        print("".join(line))
+    grid[r][c] = "."
+
     to_be_pushed = []
     dr, dc = directions[move]
+    if grid[r+dr][c+dc] == "#":
+        continue
     r, c = r + dr, c + dc
     if grid[r][c] == ".": #moves on empty place withnout pushing boxes
-        continue
+        pass
     elif move in "<>": #move left/right -> only one row of boxes would be pushed
         push_r, push_c = r, c
         while grid[push_r][push_c] in "[]":
             to_be_pushed.append((push_r, push_c))
             push_r, push_c = push_r + dr, push_c + dc
             if grid[push_r][push_c] == "#":
+                c -= dc
                 break
         if grid[push_r][push_c] == ".":
             for push in reversed(to_be_pushed):
@@ -40,4 +56,46 @@ for move in lines[1]:
                 grid[r+dr][c+dc] = grid[r][c]
             grid[r][c] = "."
     elif move in "v^": #move up/down -> may affect multiple boxes on more lines
-        ...
+        queue = deque([(r,c)])
+        must_be_moved = []
+        while queue:
+            row, col = queue.pop()
+            if grid[row][col] == "#":
+                move = False
+                queue = []
+                must_be_moved = []
+            elif grid[row][col] == "[":
+                queue += [(row +dr, col), (row+dr, col+1)]
+                must_be_moved += [(row, col), (row, col+1)]
+            elif grid[row][col] == "]":
+                queue += [(row+dr, col), (row+dr, col-1)]
+                must_be_moved += [(row, col), (row, col-1)]
+        if not move:
+            r = r - dr
+        print(must_be_moved)
+        if dr < 0: #move up
+            must_be_moved = sorted(list(set(must_be_moved)))
+            for row, col in must_be_moved:
+                grid[row + dr][col] = grid[row][col]
+                grid[row][col] = "."
+        if dr > 0:
+            must_be_moved = set(must_be_moved)
+            sorted_data = sorted(must_be_moved, key=lambda x: (-x[0], -x[1]))
+            for row, col in sorted_data:
+                grid[row + dr][col] = grid[row][col]
+                grid[row][col] = "."
+
+    print(" ")
+
+grid[r][c] = "@"
+for line in grid:
+    grid[r][c] = "@"
+    print("".join(line))
+grid[r][c] = "."
+
+gps = 0
+for row, line in enumerate(grid):
+    for col, char in enumerate(line):
+        if char == "[":
+            gps += 100* row + col
+print(gps)
