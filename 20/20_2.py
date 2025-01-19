@@ -40,3 +40,17 @@ for r in range(max_r):
             if shortcut > 100:
                 result += 1
 print("Part 1:", result)
+
+result = 0
+for r in range(max_r):
+    for c in range(max_c):
+        if grid[r][c] == "#": continue
+        for d_r in range(-20, 20 + 1):
+            for d_c in range(-20 + abs(d_r), 20 - abs(d_r) + 1): #get all points in manhattan distance of max 20
+                new_r = r + d_r
+                new_c = c + d_c
+                if (new_r, new_c) not in distances.keys(): continue
+                #saved distance minus length of shortcut must be >= 100
+                if distances[(new_r, new_c)] - distances[(r, c)] - (abs(d_c) + abs(d_r)) >= 100 :
+                    result += 1
+print("Part 2:", result)
